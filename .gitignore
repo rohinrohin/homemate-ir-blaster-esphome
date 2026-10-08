@@ -1,0 +1,14 @@
+# Secrets (Wi-Fi, hotspot password)
+secrets.yaml
+
+# Build output
+.esphome/
+*.uf2
+*.bin
+
+# Stock firmware dumps and analysis (device-specific data)
+backup/
+analysis/
+
+# Logs (contain IP/MAC/SSID)
+*.log

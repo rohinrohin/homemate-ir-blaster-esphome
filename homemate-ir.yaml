@@ -1,0 +1,89 @@
+# HomeMate IR blaster - T1-3S module (Beken BK7238)
+# Pins traced on this unit with a multimeter (2026-10-07):
+#   P6  -> IR transmit (1 kOhm to base of all 4 S8050/J3Y LED drivers)
+#   P26 -> IR receiver OUT (receiver powered from 3.3 V via 100 Ohm)
+#   P24 -> status LED (polarity not yet confirmed)
+#   P9  -> button (other side to GND via 1 kOhm, so active-low)
+
+esphome:
+  name: homemate-ir
+  friendly_name: HomeMate IR
+
+bk72xx:
+  board: t1-3s
+
+logger:
+
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  ap:
+    ssid: "HomeMate-IR Fallback"
+    password: !secret ap_password
+
+captive_portal:
+
+status_led:
+  pin:
+    number: P24
+    inverted: false  # flip to true if the LED behaves backwards
+
+remote_receiver:
+  id: ir_rx
+  pin:
+    number: P26
+    inverted: true  # IR receiver modules output active-low
+    mode:
+      input: true
+      pullup: true
+  dump: all
+  idle: 32ms       # Panasonic AC frames are long, with a gap between parts
+  tolerance: 25%
+
+remote_transmitter:
+  id: ir_tx
+  pin: P6
+  carrier_duty_percent: 50%
+
+# Panasonic AC: same heatpumpir protocol already proven on this AC with another blaster
+climate:
+  - platform: heatpumpir
+    name: "Panasonic AC"
+    protocol: panasonic_dke
+    horizontal_default: middle
+    vertical_default: middle
+    min_temperature: 16
+    max_temperature: 30
+
+sensor:
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "Uptime"
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+
+binary_sensor:
+  - platform: gpio
+    name: "Button"
+    pin:
+      number: P9
+      inverted: true
+      mode:
+        input: true
+        pullup: true
+    filters:
+      - delayed_on_off: 30ms
+
+button:
+  - platform: restart
+    name: "Restart"
